@@ -1,0 +1,237 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>The Poisoning of Lord Harrington · A start.ng Mystery</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔍</text></svg>">
+  <link rel="stylesheet" href="./src/styles.css">
+
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.185.1/build/three.module.js",
+        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.185.1/examples/jsm/"
+      }
+    }
+  </script>
+</head>
+<body>
+  <!-- 3D WebGL Canvas Layer -->
+  <div id="canvas-container">
+    <canvas id="webgl-canvas"></canvas>
+  </div>
+
+  <!-- HUD & UI Overlay -->
+  <div id="ui-root">
+    <!-- Top Bar -->
+    <header class="header-hud">
+      <!-- start.ng Central Character & Profile Badge -->
+      <div class="player-card" id="player-profile">
+        <div class="player-avatar" id="player-avatar">🕵️</div>
+        <div class="player-info">
+          <span class="player-name" id="player-name">Detective</span>
+          <span class="player-handle" id="player-handle">Loading…</span>
+        </div>
+        <button class="btn-signin" id="btn-signin" hidden>Sign in with start.ng</button>
+      </div>
+
+      <!-- Center Case Info -->
+      <div class="case-badge">
+        <h1 class="case-title">The Poisoning of Lord Harrington</h1>
+        <div class="turns-pill">Questions Left: <span id="turns-count">10/10</span></div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="hud-actions">
+        <button class="btn-hud" id="btn-overview" title="Full Room View">🏛️ Room</button>
+        <button class="btn-hud" id="btn-wine" title="Inspect Murder Desk">🍷 Crime Desk</button>
+        <button class="btn-hud" id="btn-notebook" title="Case Notebook">📓 Clues</button>
+        <button class="btn-hud" id="btn-settings" title="AI Settings">⚙️</button>
+        <button class="btn-hud btn-accuse" id="btn-accuse">⚖️ Accuse</button>
+      </div>
+    </header>
+
+    <!-- Bottom Interrogation Panel -->
+    <main class="interrogation-panel">
+      <!-- Suspect Selection Tabs -->
+      <nav class="suspect-tabs">
+        <button class="suspect-tab active" data-suspect="butler">
+          <span class="tab-icon">🫖</span>
+          <span>Arthur (Butler)</span>
+        </button>
+        <button class="suspect-tab" data-suspect="partner">
+          <span class="tab-icon">🎩</span>
+          <span>Marcus (Partner)</span>
+        </button>
+        <button class="suspect-tab" data-suspect="doctor">
+          <span class="tab-icon">🩺</span>
+          <span>Dr. Evelyn (Doctor)</span>
+        </button>
+      </nav>
+
+      <!-- Suspect Demeanor & Stress Bar -->
+      <div class="suspect-status-bar">
+        <div class="status-label">
+          Demeanor: <span class="status-badge" id="suspect-status">Nervous & Stiff</span>
+        </div>
+        <div class="stress-meter-wrap">
+          <span class="status-label">Agitation / Suspicion:</span>
+          <div class="stress-meter-bg">
+            <div class="stress-meter-fill" id="stress-fill"></div>
+          </div>
+          <span class="stress-val" id="stress-val">15%</span>
+        </div>
+      </div>
+
+      <!-- Dialogue History -->
+      <div class="dialogue-box" id="dialogue-box">
+        <div class="message-bubble suspect">
+          <div class="bubble-sender">Arthur Pendelton (The Butler)</div>
+          <div class="bubble-text">
+            Welcome to Harrington Manor, Detective. A terrible tragedy... His lordship was found lifeless at his desk after dinner. I am at your service, though I was fast asleep in the pantry from 9:30 PM onward.
+          </div>
+        </div>
+      </div>
+
+      <!-- Suggested Quick Inquiry Chips -->
+      <div class="quick-chips" id="quick-chips"></div>
+
+      <!-- Question Input Form -->
+      <form class="input-row" id="ask-form">
+        <input
+          type="text"
+          id="question-input"
+          class="question-input"
+          placeholder="Ask a question or confront the suspect (e.g. 'Where were you at 10 PM?' or 'What about the wine?')..."
+          autocomplete="off"
+        />
+        <button type="submit" class="btn-ask">Interrogate</button>
+      </form>
+    </main>
+  </div>
+
+  <!-- Notebook Modal -->
+  <div class="modal-overlay" id="modal-notebook" hidden>
+    <div class="modal-card">
+      <h2 class="modal-title">📓 Detective's Case Notebook</h2>
+      <div class="modal-body">
+        <div style="margin-bottom: 12px; color: var(--accent-gold); font-weight: 600;">
+          Incident Overview:
+        </div>
+        <p style="margin-bottom: 14px; color: var(--text-dim);">
+          Lord Harrington collapsed in his private study at 10:15 PM. A half-consumed glass of vintage 1895 Bordeaux was found on his blotter. Cause of death appears to be rapid poisoning.
+        </p>
+        <div style="margin-bottom: 8px; color: var(--accent-gold); font-weight: 600;">
+          Gathered Clues & Contradictions:
+        </div>
+        <div id="clues-list"></div>
+      </div>
+      <div class="modal-actions">
+        <button class="btn-secondary" data-close-modal>Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Accusation Modal -->
+  <div class="modal-overlay" id="modal-accuse" hidden>
+    <div class="modal-card">
+      <h2 class="modal-title">⚖️ Convene the Accusation</h2>
+      <form id="form-accuse">
+        <div class="modal-body">
+          <p style="margin-bottom: 16px; color: var(--text-dim);">
+            Present your formal deduction to Scotland Yard. You only get one verdict—choose carefully based on testimony and physical evidence!
+          </p>
+
+          <div class="form-group">
+            <label for="accuse-suspect">Who is the Murderer?</label>
+            <select id="accuse-suspect" class="select-input" required>
+              <option value="butler">Arthur Pendelton (The Butler)</option>
+              <option value="partner">Marcus Vance (The Business Partner)</option>
+              <option value="doctor">Dr. Evelyn Sterling (The Personal Physician)</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="accuse-weapon">What was the Murder Method?</label>
+            <select id="accuse-weapon" class="select-input" required>
+              <option value="poisoned_wine">Potassium Cyanide in the 1895 Vintage Wine</option>
+              <option value="blunt_trauma">Blunt Force Trauma with the Heavy Bookend</option>
+              <option value="arsenic_tea">Arsenic laced into the Evening Tea</option>
+              <option value="dagger">Concealed Pearl-Handled Letter Opener</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="accuse-motive">Crucial Evidence / Motive:</label>
+            <select id="accuse-motive" class="select-input" required>
+              <option value="cyanide_slip">Suspect slipped up mentioning cyanide & almond odor before toxicology</option>
+              <option value="railway_debt">Furious argument over colonial railway shares</option>
+              <option value="butler_revenge">Disgruntled servant fearing dismissal</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="modal-actions">
+          <button type="button" class="btn-secondary" data-close-modal>Deliberate More</button>
+          <button type="submit" class="btn-primary" style="background:#dc2626;color:#fff;">Deliver Verdict</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Result Modal -->
+  <div class="modal-overlay" id="modal-result" hidden>
+    <div class="modal-card">
+      <h2 class="modal-title" id="result-title">Verdict Reached</h2>
+      <div class="modal-body">
+        <p id="result-debrief" style="font-size: 15px; margin-bottom: 14px;"></p>
+        <div id="result-score" style="font-size: 18px; font-weight: 700; color: var(--accent-gold); margin-bottom: 12px;"></div>
+        <p id="board-status" style="font-size: 13px; color: var(--accent-cyan); margin-bottom: 14px;"></p>
+
+        <div style="font-weight: 700; color: var(--text-dim); margin-top: 14px; margin-bottom: 6px;">
+          🏆 start.ng High Detective Board:
+        </div>
+        <div id="leaderboard-container"></div>
+      </div>
+      <div class="modal-actions">
+        <button class="btn-primary" id="btn-play-again">Play Again</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Settings Modal (Optional Gemini Live AI) -->
+  <div class="modal-overlay" id="modal-settings" hidden>
+    <div class="modal-card">
+      <h2 class="modal-title">⚙️ Detective Settings (AI Engine)</h2>
+      <form id="form-settings">
+        <div class="modal-body">
+          <p style="margin-bottom: 14px; color: var(--text-dim);">
+            The game runs out of the box with an intelligent local heuristic AI dialogue engine. Optionally, you can supply your personal Google Gemini API key to enable live LLM generation for infinite dynamic conversations!
+          </p>
+
+          <div class="form-group">
+            <label for="gemini-key-input">Google Gemini API Key (Optional):</label>
+            <!-- Note: text field to adhere to start.ng rules prohibiting password fields -->
+            <input
+              type="text"
+              id="gemini-key-input"
+              class="text-input"
+              placeholder="AIzaSy... (Leave blank for built-in AI)"
+            />
+            <small style="color:var(--text-dim); display:block; margin-top:4px;">
+              Stored only in your local browser storage. Never sent to any 3rd party.
+            </small>
+          </div>
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn-secondary" data-close-modal>Cancel</button>
+          <button type="submit" class="btn-primary">Save Settings</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script type="module" src="./src/main.js"></script>
+</body>
+</html>

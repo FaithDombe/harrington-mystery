@@ -1,0 +1,8 @@
+{
+  "leaderboard": {
+    "stats": [
+      { "key": "score", "label": "Detective Score", "order": "highest" },
+      { "key": "turns_left", "label": "Turns Left", "order": "highest" }
+    ]
+  }
+}
