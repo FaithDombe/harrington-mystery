@@ -1,7 +1,6 @@
 // The start.ng character: the same 3D person as the start.ng profile (startng-fe src/three/human.ts),
 // plus walking. In metres, about 1.7-1.75 m tall, facing +z. Keep the look in step with start.ng.
 import * as THREE from 'three';
-import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 
 const PI = Math.PI;
 const SHOE = '#2a211b';

@@ -447,6 +447,11 @@ canvas {
   animation: fadeIn 0.2s ease;
 }
 
+.modal-overlay[hidden],
+[hidden] {
+  display: none !important;
+}
+
 .modal-card {
   width: 90%;
   max-width: 580px;

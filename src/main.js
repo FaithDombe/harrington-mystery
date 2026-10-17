@@ -9,7 +9,7 @@ import {
   fetchLeaderboard
 } from './platform.js';
 
-window.addEventListener('DOMContentLoaded', async () => {
+async function initGame() {
   const canvas = document.getElementById('webgl-canvas');
   const scene = new MysteryScene(canvas);
   const game = new MysteryGame();
@@ -385,4 +385,10 @@ window.addEventListener('DOMContentLoaded', async () => {
       setTimeout(() => toast.remove(), 500);
     }, 4500);
   }
-});
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initGame);
+} else {
+  initGame();
+}

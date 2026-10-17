@@ -24,14 +24,13 @@ export class MysteryScene {
     this.renderer.setSize(window.innerWidth, window.innerHeight);
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     this.renderer.shadowMap.enabled = true;
-    this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    this.renderer.shadowMap.type = THREE.PCFShadowMap;
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    this.renderer.toneMappingExposure = 1.05;
+    this.renderer.toneMappingExposure = 1.15;
 
     // Scene & Camera
     this.scene = new THREE.Scene();
-    this.scene.background = new THREE.Color('#0c1017');
-    this.scene.fog = new THREE.FogExp2('#0c1017', 0.04);
+    this.scene.background = new THREE.Color('#101622');
 
     this.camera = new THREE.PerspectiveCamera(
       45,
@@ -270,35 +269,29 @@ export class MysteryScene {
   }
 
   setupLighting() {
-    // Ambient light - Deep moody cool tone
-    const ambient = new THREE.AmbientLight('#2a374b', 0.85);
+    // Ambient light - warm, clear Victorian interior
+    const ambient = new THREE.AmbientLight('#fff3e0', 1.8);
     this.scene.add(ambient);
 
+    // Main ceiling chandelier directional light
+    const mainLight = new THREE.DirectionalLight('#fffaf0', 2.8);
+    mainLight.position.set(2, 7, 4);
+    this.scene.add(mainLight);
+
+    // Fill light from left
+    const fillLight = new THREE.DirectionalLight('#b0c4de', 1.4);
+    fillLight.position.set(-4, 5, 2);
+    this.scene.add(fillLight);
+
     // Fireplace warm flickering light
-    this.fireLight = new THREE.PointLight('#ff7700', 2.8, 10, 1.2);
+    this.fireLight = new THREE.PointLight('#ff7700', 3.5, 12, 0.5);
     this.fireLight.position.set(-4.8, 1.2, -1);
-    this.fireLight.castShadow = true;
     this.scene.add(this.fireLight);
 
     // Desk Lamp warm illumination
-    const deskLight = new THREE.PointLight('#ffdf9e', 2.2, 6, 1.4);
+    const deskLight = new THREE.PointLight('#ffdf9e', 2.8, 8, 0.5);
     deskLight.position.set(-0.9, 1.6, -2.8);
-    deskLight.castShadow = true;
     this.scene.add(deskLight);
-
-    // Chandelier / Top room light
-    const chandelier = new THREE.PointLight('#ffd194', 1.8, 14, 1.5);
-    chandelier.position.set(0, 5.0, 0);
-    chandelier.castShadow = true;
-    chandelier.shadow.bias = -0.001;
-    chandelier.shadow.mapSize.width = 1024;
-    chandelier.shadow.mapSize.height = 1024;
-    this.scene.add(chandelier);
-
-    // Rim light from the right
-    const rimLight = new THREE.DirectionalLight('#748cab', 0.6);
-    rimLight.position.set(5, 6, 4);
-    this.scene.add(rimLight);
   }
 
   spawnSuspects() {
